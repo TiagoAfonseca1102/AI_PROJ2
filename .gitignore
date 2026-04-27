@@ -1,0 +1,11 @@
+# Ambientes virtuais
+venv/
+.env/
+.envrc/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Outros comuns
+.DS_Store
