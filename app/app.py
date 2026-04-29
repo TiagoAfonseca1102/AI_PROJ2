@@ -15,7 +15,6 @@ sys.path.insert(0, str(ROOT))
 
 MODEL_PATH = ROOT / "models" / "noshow_model.pkl"
 
-# ── Carregar modelo ───────────────────────────────────────────────────────────
 @st.cache_resource
 def load_model():
     if not MODEL_PATH.exists():
@@ -25,14 +24,12 @@ def load_model():
 
 artifact = load_model()
 
-# ── Config da página ──────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="ClinicAI — Predição de No-Show",
-    page_icon="🏥",
+    page_icon="",
     layout="wide",
 )
 
-# ── CSS mínimo ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
 .risk-high   { background:#fee2e2; border-left:5px solid #dc2626; padding:1rem; border-radius:8px; }
@@ -41,22 +38,18 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ── Cabeçalho ─────────────────────────────────────────────────────────────────
-st.title("🏥 ClinicAI — Predição de No-Show")
+st.title("ClinicAI — Predição de No-Show")
 st.caption("Sistema de apoio à decisão para otimização da agenda de consultas")
 
 if artifact is None:
-    st.error("⚠️ Modelo não encontrado. Corre primeiro `python models/train_model.py` na raiz do projeto.")
+    st.error(" Modelo não encontrado. Corre primeiro `python models/train_model.py` na raiz do projeto.")
     st.stop()
 
 pipeline = artifact["pipeline"]
 
-# ── Tabs ──────────────────────────────────────────────────────────────────────
-tab_single, tab_batch, tab_info = st.tabs(["📋 Consulta Individual", "📊 Análise em Lote", "ℹ️ Sobre o Modelo"])
+tab_single, tab_batch, tab_info = st.tabs([" Consulta Individual", " Análise em Lote", " Sobre o Modelo"])
 
-# ════════════════════════════════════════════════════════════════════════════════
-# TAB 1 — Consulta individual
-# ════════════════════════════════════════════════════════════════════════════════
+
 with tab_single:
     st.subheader("Prever risco de no-show para uma consulta")
 
@@ -88,7 +81,7 @@ with tab_single:
         st.markdown("**Contacto / Lembretes**")
         sms_received   = st.toggle("SMS de lembrete enviado?", value=True)
 
-    # ── Predição ──────────────────────────────────────────────────────────────
+    # ── Predição ───
     sample = pd.DataFrame([{
         "age": age,
         "distance_km": distance_km,
@@ -111,13 +104,12 @@ with tab_single:
         st.metric("Probabilidade de No-Show", f"{prob:.1%}")
 
         if prob >= 0.55:
-            st.markdown(f'<div class="risk-high">🔴 <b>Risco Elevado</b> — Recomenda-se contacto proativo com o paciente e/ou overbooking controlado.</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="risk-high"> <b>Risco Elevado</b> — Recomenda-se contacto proativo com o paciente e/ou overbooking controlado.</div>', unsafe_allow_html=True)
         elif prob >= 0.30:
-            st.markdown(f'<div class="risk-medium">🟡 <b>Risco Moderado</b> — Considerar envio de lembrete adicional.</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="risk-medium"> <b>Risco Moderado</b> — Considerar envio de lembrete adicional.</div>', unsafe_allow_html=True)
         else:
-            st.markdown(f'<div class="risk-low">🟢 <b>Risco Baixo</b> — Sem ação necessária.</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="risk-low"> <b>Risco Baixo</b> — Sem ação necessária.</div>', unsafe_allow_html=True)
 
-        # Gauge simples com matplotlib
         fig, ax = plt.subplots(figsize=(4, 0.6))
         ax.barh(0, 1, color="#e5e7eb", height=0.5)
         color = "#dc2626" if prob >= 0.55 else "#ca8a04" if prob >= 0.30 else "#16a34a"
@@ -126,9 +118,6 @@ with tab_single:
         st.pyplot(fig, use_container_width=True)
 
 
-# ════════════════════════════════════════════════════════════════════════════════
-# TAB 2 — Análise em lote
-# ════════════════════════════════════════════════════════════════════════════════
 with tab_batch:
     st.subheader("Simular agenda com múltiplos pacientes")
 
@@ -141,7 +130,7 @@ with tab_batch:
         probs = pipeline.predict_proba(batch[feat_cols])[:, 1]
         batch["Prob. No-Show"] = probs.round(3)
         batch["Risco"] = pd.cut(probs, bins=[0, 0.30, 0.55, 1],
-                                labels=["🟢 Baixo", "🟡 Moderado", "🔴 Elevado"])
+                                labels=[" Baixo", " Moderado", " Elevado"])
         batch["Real"] = batch["no_show"].map({0: "Presente", 1: "No-Show"})
 
         display_cols = ["age", "gender", "specialty", "lead_days",
@@ -152,7 +141,7 @@ with tab_batch:
         # Distribuição de risco
         fig, ax = plt.subplots(figsize=(5, 3))
         counts = batch["Risco"].value_counts()
-        colors_map = {"🟢 Baixo": "#16a34a", "🟡 Moderado": "#ca8a04", "🔴 Elevado": "#dc2626"}
+        colors_map = {" Baixo": "#16a34a", " Moderado": "#ca8a04", " Elevado": "#dc2626"}
         bars = ax.bar(counts.index, counts.values,
                       color=[colors_map.get(k, "#888") for k in counts.index])
         ax.set_ylabel("Nº de consultas"); ax.set_title("Distribuição de Risco na Agenda")
@@ -161,9 +150,6 @@ with tab_batch:
         st.info("Clica no botão para gerar uma agenda simulada e ver a distribuição de risco.")
 
 
-# ════════════════════════════════════════════════════════════════════════════════
-# TAB 3 — Sobre o modelo
-# ════════════════════════════════════════════════════════════════════════════════
 with tab_info:
     st.subheader("Sobre o Modelo")
     st.markdown(f"""
